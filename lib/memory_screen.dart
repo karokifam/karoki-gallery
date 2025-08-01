@@ -18,7 +18,7 @@ class _MemoryScreenState extends State<MemoryScreen> {
   List<Map<String, String>> visibleFolders = [];
   bool loading = true;
   bool loadingMore = false;
-  int batchSize = 5;
+  int batchSize = 10;
   int currentIndex = 0;
 
   late ScrollController _scrollController;
