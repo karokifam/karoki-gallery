@@ -14,76 +14,95 @@ class _MemoryScreenState extends State<MemoryScreen> {
   );
   final String rootFolderId = '1kwMYiDomZ7M1ADhYFolw3fAKEkWOJKNE';
 
-  List<Map<String, String>> folders = [];
+  List<Map<String, String>> allFolders = [];
+  List<Map<String, String>> visibleFolders = [];
   bool loading = true;
   bool loadingMore = false;
-  String? nextPageToken;
-  final ScrollController _scrollController = ScrollController();
+  int batchSize = 5;
+  int currentIndex = 0;
+
+  late ScrollController _scrollController;
 
   @override
   void initState() {
     super.initState();
-    _loadFolders();
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels >=
-              _scrollController.position.maxScrollExtent - 200 &&
-          !loadingMore &&
-          nextPageToken != null &&
-          nextPageToken!.isNotEmpty) {
-        _loadFolders(loadMore: true);
-      }
-    });
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
+    _fetchFolders();
   }
 
-  Future<void> _loadFolders({bool loadMore = false}) async {
-    setState(() {
-      if (!loadMore)
-        loading = true;
-      else
-        loadingMore = true;
-    });
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
+  /// Fetch all folder metadata first (fast)
+  Future<void> _fetchFolders() async {
     try {
-      var data = await service.listSubfolders(
-        rootFolderId,
-        pageToken: loadMore ? nextPageToken : null,
-      );
-
-      // Fetch first thumbnail for each folder
-      for (var f in data['items']) {
-        var media = await service.listMedia(f['id']!);
-        f['thumb'] =
-            media['items'].isNotEmpty ? media['items'].first['thumbnail']! : '';
-      }
-
-      setState(() {
-        if (loadMore)
-          folders.addAll(data['items']);
-        else
-          folders = data['items'];
-        nextPageToken = data['nextPageToken'];
-      });
+      var data = await service.listSubfolders(rootFolderId);
+      allFolders = List<Map<String, String>>.from(data['items']);
+      await _loadNextBatch(); // Load first 5 immediately
     } catch (e) {
-      print("Error loading folders: $e");
+      print("Error fetching folders: $e");
     } finally {
       setState(() {
         loading = false;
-        loadingMore = false;
       });
+    }
+  }
+
+  /// Load next batch of folders (5 at a time) with thumbnails
+  Future<void> _loadNextBatch() async {
+    if (currentIndex >= allFolders.length) return;
+
+    setState(() {
+      loadingMore = true;
+    });
+
+    int endIndex =
+        (currentIndex + batchSize < allFolders.length)
+            ? currentIndex + batchSize
+            : allFolders.length;
+
+    List<Map<String, String>> newBatch = [];
+
+    for (int i = currentIndex; i < endIndex; i++) {
+      var folder = allFolders[i];
+      try {
+        var media = await service.listMedia(folder['id']!);
+        folder['thumb'] =
+            media['items'].isNotEmpty ? media['items'].first['thumbnail']! : '';
+      } catch (e) {
+        folder['thumb'] = '';
+      }
+      newBatch.add(folder);
+    }
+
+    setState(() {
+      visibleFolders.addAll(newBatch);
+      currentIndex = endIndex;
+      loadingMore = false;
+    });
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200 &&
+        !loadingMore &&
+        currentIndex < allFolders.length) {
+      _loadNextBatch();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Memories'),
-        centerTitle: true,
-        ),
+      appBar: AppBar(title: Text('Memories')),
       body:
           loading
               ? Center(child: CircularProgressIndicator())
-              : folders.isEmpty
+              : visibleFolders.isEmpty
               ? Center(child: Text('No folders found'))
               : Column(
                 children: [
@@ -96,9 +115,10 @@ class _MemoryScreenState extends State<MemoryScreen> {
                         crossAxisSpacing: 10,
                         mainAxisSpacing: 10,
                       ),
-                      itemCount: folders.length,
+                      itemCount: visibleFolders.length,
                       itemBuilder: (context, index) {
-                        final folder = folders[index];
+                        final folder = visibleFolders[index];
+                        final thumb = folder['thumb'] ?? '';
                         return GestureDetector(
                           onTap:
                               () => Navigator.push(
@@ -117,9 +137,9 @@ class _MemoryScreenState extends State<MemoryScreen> {
                               children: [
                                 Expanded(
                                   child:
-                                      folder['thumb']!.isNotEmpty
+                                      thumb.isNotEmpty
                                           ? CachedNetworkImage(
-                                            imageUrl: folder['thumb']!,
+                                            imageUrl: thumb,
                                             fit: BoxFit.cover,
                                             placeholder:
                                                 (context, url) => Center(
@@ -137,7 +157,7 @@ class _MemoryScreenState extends State<MemoryScreen> {
                                 Padding(
                                   padding: EdgeInsets.all(8),
                                   child: Text(
-                                    folder['name']!,
+                                    folder['name'] ?? '',
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
