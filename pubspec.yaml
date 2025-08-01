@@ -36,6 +36,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   video_player: ^2.4.5
   crypto: ^3.0.3
+  cached_network_image: ^3.3.0
+  http: ^1.2.0
 
 dev_dependencies:
   flutter_test:
@@ -60,43 +62,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  assets:
-      - assets/memory_items/Brenda & Daisy Karoki/
-      - assets/memory_items/Brenda & Diana Karoki/
-      - assets/memory_items/Brenda & Ken Karoki/
-      - assets/memory_items/Brenda Karoki/
-      - assets/memory_items/Brenda Karoki ---The Graduate/
-      - assets/memory_items/Daisy & Diana Karoki/
-      - assets/memory_items/Daisy 15th Birthday/
-      - assets/memory_items/Daisy Karoki/
-      - assets/memory_items/Daisy Karoki -Highschool Graduation/
-      - assets/memory_items/Diana Karoki/
-      - assets/memory_items/Diana Karoki 9th Birthday/
-      - assets/memory_items/Eating Out/
-      - assets/memory_items/Ester Mathenge/
-      - assets/memory_items/Extended Family --Mathenge's side/
-      - assets/memory_items/Family/
-      - assets/memory_items/George & Brenda Karoki/
-      - assets/memory_items/George & Daisy Karoki/
-      - assets/memory_items/George & Diana Karoki/
-      - assets/memory_items/George & Ken Karoki/
-      - assets/memory_items/George Karoki/
-      - assets/memory_items/George Karoki burial/
-      - assets/memory_items/House Fasionistas/
-      - assets/memory_items/Ken & Diana Karoki/
-      - assets/memory_items/Ken Karoki/
-      - assets/memory_items/Ken Karoki 12th Birthday/
-      - assets/memory_items/Ken Karoki 14th Birthday/
-      - assets/memory_items/Mary & Brenda Karoki/
-      - assets/memory_items/Mary & Daisy Karoki/
-      - assets/memory_items/Mary & Diana Karoki/
-      - assets/memory_items/Mary & George Karoki/
-      - assets/memory_items/Mary & Ken Karoki/
-      - assets/memory_items/Mary Karoki/
-      - assets/memory_items/MothersDay 2023/
-      - assets/memory_items/Road Trips/
-      - assets/memory_items/School Going/
-      - assets/memory_items/church/
+  # assets:
+     
   # An asset can be a file or a directory. If it is a directory, all files    
    
 

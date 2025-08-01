@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
@@ -13,8 +12,9 @@ class PasswordScreen extends StatefulWidget {
 
 class _PasswordScreenState extends State<PasswordScreen> {
   final String _passwordHash =
-      '9791663b5127131c262a58fe3ee80fe08fc6d4bd877d4b38dca6cb4b0dd8276e';
+      '554e2a0d17af799cc802724e445443a4d55687d5776b40414e92d98fdf93a6d1';
   final _passwordController = TextEditingController();
+  bool _obscureText = true; // Add this line
 
   void _login() {
     final enteredPassword = _passwordController.text;
@@ -24,12 +24,12 @@ class _PasswordScreenState extends State<PasswordScreen> {
     if (digest.toString() == _passwordHash) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const MemoriesScreen()),
+        MaterialPageRoute(builder: (context) => MemoryScreen()),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Wrong password')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Wrong password')));
     }
   }
 
@@ -67,12 +67,24 @@ class _PasswordScreenState extends State<PasswordScreen> {
                     const SizedBox(height: 24.0),
                     TextField(
                       controller: _passwordController,
-                      obscureText: true,
+                      obscureText: _obscureText, // Use state variable
                       decoration: InputDecoration(
                         labelText: 'Password',
                         prefixIcon: const Icon(Icons.lock),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12.0),
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureText
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscureText = !_obscureText;
+                            });
+                          },
                         ),
                       ),
                     ),
@@ -103,4 +115,3 @@ class _PasswordScreenState extends State<PasswordScreen> {
     );
   }
 }
-
