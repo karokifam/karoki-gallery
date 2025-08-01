@@ -1,169 +1,160 @@
-
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:cached_network_image/cached_network_image.dart';
+import 'google_drive_service.dart';
 import 'gallery_screen.dart';
 
-class MemoriesScreen extends StatefulWidget {
-  const MemoriesScreen({super.key});
-
+class MemoryScreen extends StatefulWidget {
   @override
-  State<MemoriesScreen> createState() => _MemoriesScreenState();
+  _MemoryScreenState createState() => _MemoryScreenState();
 }
 
-class _MemoriesScreenState extends State<MemoriesScreen> {
-  // A map where key is folder path (e.g., "assets/memory_items/Family/")
-  // and value is the thumbnail path (e.g., "assets/memory_items/Family/image1.jpg")
-  Map<String, String?> _memories = {};
+class _MemoryScreenState extends State<MemoryScreen> {
+  final GoogleDriveService service = GoogleDriveService(
+    'AIzaSyDgHaHgA8C1GPbwsS2UKTL1TVVtbDLwE9U',
+  );
+  final String rootFolderId = '1kwMYiDomZ7M1ADhYFolw3fAKEkWOJKNE';
+
+  List<Map<String, String>> folders = [];
+  bool loading = true;
+  bool loadingMore = false;
+  String? nextPageToken;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _loadMemories();
+    _loadFolders();
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+              _scrollController.position.maxScrollExtent - 200 &&
+          !loadingMore &&
+          nextPageToken != null &&
+          nextPageToken!.isNotEmpty) {
+        _loadFolders(loadMore: true);
+      }
+    });
   }
 
-  Future<void> _loadMemories() async {
-    final manifestContent = await rootBundle.loadString('AssetManifest.json');
-    final Map<String, dynamic> manifestMap = json.decode(manifestContent);
-
-    // Get all file paths under memory_items
-    final allMemoryFiles = manifestMap.keys
-        .where((String key) => key.startsWith('assets/memory_items/'));
-
-    // Group files by their parent directory
-    final Map<String, List<String>> folders = {};
-    for (var file in allMemoryFiles) {
-      // "assets/memory_items/Family/image.jpg" -> "assets/memory_items/Family/"
-      var directory = '${file.substring(0, file.lastIndexOf('/'))}/';
-      if (!folders.containsKey(directory)) {
-        folders[directory] = [];
-      }
-      folders[directory]!.add(file);
-    }
-    
-    // Find a thumbnail for each folder
-    final Map<String, String?> memoriesData = {};
-    folders.forEach((path, files) {
-        // Find the first image file to use as a thumbnail
-        final thumbnail = files.firstWhere(
-            (file) => file.endsWith('.jpg') || file.endsWith('.jpeg') || file.endsWith('.png') || file.endsWith('.mp4'),
-            orElse: () => '',
-        );
-        memoriesData[path] = thumbnail;
+  Future<void> _loadFolders({bool loadMore = false}) async {
+    setState(() {
+      if (!loadMore)
+        loading = true;
+      else
+        loadingMore = true;
     });
 
-    if (mounted) {
+    try {
+      var data = await service.listSubfolders(
+        rootFolderId,
+        pageToken: loadMore ? nextPageToken : null,
+      );
+
+      // Fetch first thumbnail for each folder
+      for (var f in data['items']) {
+        var media = await service.listMedia(f['id']!);
+        f['thumb'] =
+            media['items'].isNotEmpty ? media['items'].first['thumbnail']! : '';
+      }
+
       setState(() {
-        _memories = memoriesData;
+        if (loadMore)
+          folders.addAll(data['items']);
+        else
+          folders = data['items'];
+        nextPageToken = data['nextPageToken'];
+      });
+    } catch (e) {
+      print("Error loading folders: $e");
+    } finally {
+      setState(() {
+        loading = false;
+        loadingMore = false;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final memoryPaths = _memories.keys.toList();
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Memories'),
-        centerTitle: true ,
-        backgroundColor: Colors.lightBlueAccent,
-      ),
-      body: memoryPaths.isEmpty
-          ? const Center(child: CircularProgressIndicator())
-          : GridView.builder(
-              padding: const EdgeInsets.all(8.0),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 8.0,
-                mainAxisSpacing: 8.0,
-              ),
-              itemCount: memoryPaths.length,
-              itemBuilder: (context, index) {
-                final memoryPath = memoryPaths[index];
-                final thumbnailPath = _memories[memoryPath];
-                final memoryName = memoryPath.split('/')[2];
-                final isVideo = thumbnailPath?.endsWith('.mp4') ?? false;
-
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            GalleryScreen(memoryPath: memoryPath),
+        title: Text('Memories'),
+        centerTitle: true,
+        ),
+      body:
+          loading
+              ? Center(child: CircularProgressIndicator())
+              : folders.isEmpty
+              ? Center(child: Text('No folders found'))
+              : Column(
+                children: [
+                  Expanded(
+                    child: GridView.builder(
+                      controller: _scrollController,
+                      padding: EdgeInsets.all(10),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
                       ),
-                    );
-                  },
-                  child: Card(
-                    clipBehavior: Clip.antiAlias,
-                    elevation: 4.0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16.0),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              if (thumbnailPath != null)
-                                Image.asset(
-                                  isVideo ? 'assets/video_placeholder.png' : thumbnailPath,
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      color: Colors.grey[800],
-                                      child: const Center(
-                                        child: Icon(
-                                          Icons.broken_image,
-                                          color: Colors.white,
-                                          size: 40,
-                                        ),
+                      itemCount: folders.length,
+                      itemBuilder: (context, index) {
+                        final folder = folders[index];
+                        return GestureDetector(
+                          onTap:
+                              () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) => GalleryScreen(
+                                        folderId: folder['id']!,
+                                        folderName: folder['name']!,
                                       ),
-                                    );
-                                  },
                                 ),
-                              if (isVideo)
-                                const Center(
-                                  child: Icon(
-                                    Icons.play_circle_fill,
-                                    color: Colors.white,
-                                    size: 50,
+                              ),
+                          child: Card(
+                            elevation: 4,
+                            child: Column(
+                              children: [
+                                Expanded(
+                                  child:
+                                      folder['thumb']!.isNotEmpty
+                                          ? CachedNetworkImage(
+                                            imageUrl: folder['thumb']!,
+                                            fit: BoxFit.cover,
+                                            placeholder:
+                                                (context, url) => Center(
+                                                  child:
+                                                      CircularProgressIndicator(),
+                                                ),
+                                            errorWidget:
+                                                (context, url, error) => Icon(
+                                                  Icons.folder,
+                                                  size: 80,
+                                                ),
+                                          )
+                                          : Icon(Icons.folder, size: 80),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.all(8),
+                                  child: Text(
+                                    folder['name']!,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                              if (thumbnailPath == null)
-                                Container(
-                                  color: Colors.grey[800],
-                                  child: const Center(
-                                    child: Icon(
-                                      Icons.photo_album,
-                                      color: Colors.white,
-                                      size: 40,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Text(
-                            memoryName,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16.0,
+                              ],
                             ),
                           ),
-                        ),
-                      ],
+                        );
+                      },
                     ),
                   ),
-                );
-              },
-            ),
+                  if (loadingMore)
+                    Padding(
+                      padding: EdgeInsets.all(10),
+                      child: CircularProgressIndicator(),
+                    ),
+                ],
+              ),
     );
   }
 }
-
