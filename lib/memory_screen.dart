@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'google_drive_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'service/cloudinary_service.dart';
 import 'gallery_screen.dart';
+import 'account_center_screen.dart';
 
 class MemoryScreen extends StatefulWidget {
   @override
@@ -9,10 +11,8 @@ class MemoryScreen extends StatefulWidget {
 }
 
 class _MemoryScreenState extends State<MemoryScreen> {
-  final GoogleDriveService service = GoogleDriveService(
-    'AIzaSyDgHaHgA8C1GPbwsS2UKTL1TVVtbDLwE9U',
-  );
-  final String rootFolderId = '1kwMYiDomZ7M1ADhYFolw3fAKEkWOJKNE';
+  final CloudinaryService service = CloudinaryService();
+  String get rootFolderId => dotenv.env['CLOUDINARY_ROOT_FOLDER'] ?? 'YourRootFolder';
 
   List<Map<String, String>> allFolders = [];
   List<Map<String, String>> visibleFolders = [];
@@ -98,7 +98,20 @@ class _MemoryScreenState extends State<MemoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Memories')),
+      appBar: AppBar(
+        title: Text('Memories'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.account_circle),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AccountCenterScreen()),
+              );
+            },
+          ),
+        ],
+      ),
       body:
           loading
               ? Center(child: CircularProgressIndicator())
@@ -110,8 +123,9 @@ class _MemoryScreenState extends State<MemoryScreen> {
                     child: GridView.builder(
                       controller: _scrollController,
                       padding: EdgeInsets.all(10),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
+                      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 120,
+                        childAspectRatio: 1.0,
                         crossAxisSpacing: 10,
                         mainAxisSpacing: 10,
                       ),
@@ -133,32 +147,41 @@ class _MemoryScreenState extends State<MemoryScreen> {
                               ),
                           child: Card(
                             elevation: 4,
-                            child: Column(
+                            clipBehavior: Clip.antiAlias,
+                            child: Stack(
+                              fit: StackFit.expand,
                               children: [
-                                Expanded(
-                                  child:
-                                      thumb.isNotEmpty
-                                          ? CachedNetworkImage(
-                                            imageUrl: thumb,
-                                            fit: BoxFit.cover,
-                                            placeholder:
-                                                (context, url) => Center(
-                                                  child:
-                                                      CircularProgressIndicator(),
-                                                ),
-                                            errorWidget:
-                                                (context, url, error) => Icon(
-                                                  Icons.folder,
-                                                  size: 80,
-                                                ),
-                                          )
-                                          : Icon(Icons.folder, size: 80),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.all(8),
-                                  child: Text(
-                                    folder['name'] ?? '',
-                                    overflow: TextOverflow.ellipsis,
+                                thumb.isNotEmpty
+                                    ? CachedNetworkImage(
+                                        imageUrl: thumb,
+                                        fit: BoxFit.cover,
+                                        placeholder:
+                                            (context, url) => Center(
+                                              child:
+                                                  CircularProgressIndicator(),
+                                            ),
+                                        errorWidget:
+                                            (context, url, error) => Icon(
+                                              Icons.folder,
+                                              size: 80,
+                                            ),
+                                      )
+                                    : Icon(Icons.folder, size: 80),
+                                Align(
+                                  alignment: Alignment.bottomCenter,
+                                  child: Container(
+                                    width: double.infinity,
+                                    color: Colors.black54,
+                                    padding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                                    child: Text(
+                                      folder['name'] ?? '',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                                 ),
                               ],

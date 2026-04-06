@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'google_drive_service.dart';
+import 'package:image_picker/image_picker.dart';
+import 'service/cloudinary_service.dart';
 import 'video_player_screen.dart';
+import 'image_viewer_screen.dart';
 
 class GalleryScreen extends StatefulWidget {
   final String folderId;
@@ -14,9 +17,7 @@ class GalleryScreen extends StatefulWidget {
 }
 
 class _GalleryScreenState extends State<GalleryScreen> {
-  final GoogleDriveService service = GoogleDriveService(
-    'AIzaSyDgHaHgA8C1GPbwsS2UKTL1TVVtbDLwE9U',
-  );
+  final CloudinaryService service = CloudinaryService();
 
   List<Map<String, String>> media = [];
   bool loading = true;
@@ -50,7 +51,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
     try {
       var data = await service.listMedia(
         widget.folderId,
-        pageToken: loadMore ? nextPageToken : null,
+        nextCursor: loadMore ? nextPageToken : null,
       );
 
       setState(() {
@@ -70,6 +71,33 @@ class _GalleryScreenState extends State<GalleryScreen> {
     }
   }
 
+  Future<void> _uploadMedia() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? file = await picker.pickMedia();
+
+    if (file != null) {
+      setState(() {
+        loading = true;
+      });
+
+      bool success = await service.uploadMedia(file.path, widget.folderId);
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload successful!')),
+        );
+        nextPageToken = null;
+        _loadMedia(); // reload
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload failed.')),
+        );
+        setState(() {
+          loading = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,8 +113,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
                     child: GridView.builder(
                       controller: _scrollController,
                       padding: EdgeInsets.all(10),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
+                      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 150,
                         crossAxisSpacing: 10,
                         mainAxisSpacing: 10,
                       ),
@@ -94,6 +122,12 @@ class _GalleryScreenState extends State<GalleryScreen> {
                       itemBuilder: (context, index) {
                         final file = media[index];
                         final isVideo = file['mimeType']!.startsWith('video/');
+
+                        // Ensure raw file URL from Cloudinary API
+                        final fileUrl = file['url']!;
+                        final thumbnailUrl =
+                            file['thumbnail'] ?? fileUrl; // fallback
+
                         return GestureDetector(
                           onTap: () {
                             if (isVideo) {
@@ -101,26 +135,18 @@ class _GalleryScreenState extends State<GalleryScreen> {
                                 context,
                                 MaterialPageRoute(
                                   builder:
-                                      (_) => VideoPlayerScreen(
-                                        videoUrl: file['url']!,
-                                      ),
+                                      (_) =>
+                                          VideoPlayerScreen(videoUrl: fileUrl),
                                 ),
                               );
                             } else {
-                              showDialog(
-                                context: context,
-                                builder:
-                                    (_) => Dialog(
-                                      child: CachedNetworkImage(
-                                        imageUrl: file['url']!,
-                                        fit: BoxFit.contain,
-                                        placeholder:
-                                            (context, url) => Center(
-                                              child:
-                                                  CircularProgressIndicator(),
-                                            ),
-                                      ),
-                                    ),
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) =>
+                                          ImageViewerScreen(imageUrl: fileUrl),
+                                ),
                               );
                             }
                           },
@@ -150,15 +176,16 @@ class _GalleryScreenState extends State<GalleryScreen> {
                                       ],
                                     )
                                     : CachedNetworkImage(
-                                      imageUrl: file['thumbnail']!,
+                                      imageUrl: thumbnailUrl,
                                       fit: BoxFit.cover,
                                       placeholder:
                                           (context, url) => Center(
                                             child: CircularProgressIndicator(),
                                           ),
-                                      errorWidget:
-                                          (context, url, error) =>
-                                              Icon(Icons.image),
+                                      errorWidget: (context, url, error) {
+                                        print('Failed to load image: $url\nError: $error');
+                                        return Icon(Icons.error, color: Colors.red);
+                                      },
                                     ),
                           ),
                         );
@@ -172,6 +199,10 @@ class _GalleryScreenState extends State<GalleryScreen> {
                     ),
                 ],
               ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _uploadMedia,
+        child: Icon(Icons.add_a_photo),
+      ),
     );
   }
 }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
-import 'memory_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'home_screen.dart';
+import 'service/database_service.dart';
 
 class PasswordScreen extends StatefulWidget {
   const PasswordScreen({super.key});
@@ -11,20 +13,74 @@ class PasswordScreen extends StatefulWidget {
 }
 
 class _PasswordScreenState extends State<PasswordScreen> {
-  final String _passwordHash =
-      '554e2a0d17af799cc802724e445443a4d55687d5776b40414e92d98fdf93a6d1';
-  final _passwordController = TextEditingController();
-  bool _obscureText = true; // Add this line
+  final List<Map<String, dynamic>> _accounts = [
+    {'name': 'Mary Karoki', 'color': Colors.pinkAccent},
+    {'name': 'Brenda Karoki', 'color': Colors.purpleAccent},
+    {'name': 'Daisy Karoki', 'color': Colors.orangeAccent},
+    {'name': 'Ken Karoki', 'color': Colors.blueAccent},
+    {'name': 'Diana Karoki', 'color': Colors.tealAccent},
+  ];
 
-  void _login() {
+  Map<String, dynamic>? _selectedAccount;
+  
+
+  final _passwordController = TextEditingController();
+  bool _obscureText = true;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLogin();
+  }
+
+  Future<void> _checkLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    if (isLoggedIn && mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+      );
+    }
+  }
+
+  Future<void> _login() async {
+    if (_selectedAccount == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select an account first')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
     final enteredPassword = _passwordController.text;
     final bytes = utf8.encode(enteredPassword);
     final digest = sha256.convert(bytes);
 
-    if (digest.toString() == _passwordHash) {
+    final success = await DatabaseService().authenticateUser(
+      _selectedAccount!['name'],
+      digest.toString(),
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (success) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isLoggedIn', true);
+      await prefs.setString('loggedInUser', _selectedAccount!['name']);
+
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => MemoryScreen()),
+        MaterialPageRoute(builder: (context) => HomeScreen()),
       );
     } else {
       ScaffoldMessenger.of(
@@ -37,48 +93,100 @@ class _PasswordScreenState extends State<PasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade800, Colors.purple.shade900],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
+        color: const Color(0xFF0F172A),
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Card(
-              elevation: 8.0,
+              elevation: 12.0,
+              color: const Color(0xFF1E293B),
+              shadowColor: Colors.black54,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.0),
+                borderRadius: BorderRadius.circular(20.0),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(32.0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    const Icon(Icons.photo_library, size: 64, color: Color(0xFF38BDF8)),
+                    const SizedBox(height: 16.0),
                     const Text(
                       'Karoki Gallery',
                       style: TextStyle(
-                        fontSize: 28.0,
+                        fontSize: 26.0,
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 24.0),
+                    const SizedBox(height: 32.0),
+                    Theme(
+                      data: Theme.of(context).copyWith(
+                        canvasColor: const Color(0xFF1E293B),
+                      ),
+                      child: DropdownButtonFormField<Map<String, dynamic>>(
+                        value: _selectedAccount,
+                        hint: const Text('Select Account', style: TextStyle(color: Colors.grey)),
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: const Color(0xFF0F172A),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        items: _accounts.map((account) {
+                          return DropdownMenuItem<Map<String, dynamic>>(
+                            value: account,
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: account['color'],
+                                  radius: 14,
+                                  child: Text(
+                                    account['name'][0],
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(account['name'], style: const TextStyle(color: Colors.white)),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedAccount = value;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16.0),
                     TextField(
                       controller: _passwordController,
-                      obscureText: _obscureText, // Use state variable
+                      obscureText: _obscureText,
+                      style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
-                        labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock),
+                        labelText: 'Vault Password',
+                        labelStyle: const TextStyle(color: Colors.grey),
+                        prefixIcon: const Icon(Icons.lock, color: Colors.grey),
+                        filled: true,
+                        fillColor: const Color(0xFF0F172A),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12.0),
+                          borderSide: BorderSide.none,
                         ),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscureText
                                 ? Icons.visibility_off
                                 : Icons.visibility,
+                            color: Colors.grey,
                           ),
                           onPressed: () {
                             setState(() {
@@ -88,21 +196,33 @@ class _PasswordScreenState extends State<PasswordScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24.0),
+                    const SizedBox(height: 32.0),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: _login,
+                        onPressed: _isLoading ? null : _login,
                         style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF38BDF8),
+                          foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16.0),
+                          elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12.0),
                           ),
                         ),
-                        child: const Text(
-                          'Login',
-                          style: TextStyle(fontSize: 18.0),
-                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.0,
+                                ),
+                              )
+                            : const Text(
+                                'Unlock',
+                                style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w600),
+                              ),
                       ),
                     ),
                   ],
