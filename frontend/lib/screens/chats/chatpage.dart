@@ -56,7 +56,6 @@ class _ChatscreenState extends State<Chatscreen> {
   final ScrollController _scrollController = ScrollController();
 
   bool isLoading = true;
-  
 
   @override
   void initState() {
@@ -85,16 +84,30 @@ class _ChatscreenState extends State<Chatscreen> {
 
   /// ---------------- LOAD MESSAGES ----------------
   Future<void> loadMessages() async {
-    try {
-      final data = await ApiService.loadgroupMessages();
-      setState(() {
-        messages = (data).map((item) => Message.fromJson(item)).toList();
-        isLoading = false;
-      });
-      _scrollToBottom();
-    } catch (e) {
-      setState(() => isLoading = false);
-      debugPrint("Error loading messages: $e");
+    if (widget.recipient == 'group') {
+      try {
+        final data = await ApiService.loadgroupMessages();
+        setState(() {
+          messages = (data).map((item) => Message.fromJson(item)).toList();
+          isLoading = false;
+        });
+        _scrollToBottom();
+      } catch (e) {
+        setState(() => isLoading = false);
+        debugPrint("Error loading messages: $e");
+      }
+    }else{
+      try {
+        final data = await ApiService.loadgroupMessages();
+        setState(() {
+          messages = (data).map((item) => Message.fromJson(item)).toList();
+          isLoading = false;
+        });
+        _scrollToBottom();
+      } catch (e) {
+        setState(() => isLoading = false);
+        debugPrint("Error loading messages: $e");
+      }
     }
   }
 

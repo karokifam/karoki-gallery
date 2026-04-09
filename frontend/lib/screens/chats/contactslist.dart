@@ -8,7 +8,7 @@ class Contactslist extends StatelessWidget {
 
   final List<List<dynamic>> contacts = const [
     /// 👥 GROUP CHAT
-    ["Family Group", Color(0xFF22C55E), "avatars/group.svg", 'family_group'],
+    ["Family Group", Color(0xFF22C55E), "avatars/group.svg", 'group'],
     ["Mary Karoki", Color(0xFFB310DB), "avatars/mary.svg", 'marykaroki'],
     ["Brenda Karoki", Color(0xFFF53B2D), "avatars/brenda.svg", 'brendakaroki'],
     ["Daisy Karoki", Color(0xFFECD60F), "avatars/daisy.svg", 'daisykaroki'],
