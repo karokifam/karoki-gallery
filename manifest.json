@@ -1,68 +1,35 @@
 {
-  "name": "Karoki Gallery",
-  "short_name": "Karoki",
-  "description": "Your personal media gallery and storage platform for photos, videos, and memories.",
-  "start_url": "/",
-  "scope": "/",
-  "display": "standalone",
-  "orientation": "any",
-  "background_color": "#ffffff",
-  "theme_color": "#0175C2",
-  "prefer_related_applications": false,
-  "categories": ["media", "productivity"],
-  "screenshots": [
-    {
-      "src": "icons/Icon-192.png",
-      "sizes": "192x192",
-      "form_factor": "narrow",
-      "type": "image/png"
-    },
-    {
-      "src": "icons/Icon-512.png",
-      "sizes": "512x512",
-      "form_factor": "wide",
-      "type": "image/png"
-    }
-  ],
-  "icons": [
-    {
-      "src": "icons/Icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/Icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/Icon-maskable-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "icons/Icon-maskable-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Gallery",
-      "short_name": "Gallery",
-      "description": "View your gallery",
-      "url": "/?page=gallery",
-      "icons": [
+    "name": "Karoki Family Gallery",
+    "short_name": "Kark Gallery",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#020C26",
+    "theme_color": "#115E28",
+    "description": "A Gallery for Karoki family",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
         {
-          "src": "icons/Icon-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
         }
-      ]
-    }
-  ]
+    ]
 }
