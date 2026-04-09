@@ -1,3 +1,5 @@
 ui/
 processes/
-sever/.env
+server/.env
+server/.venv
+server/__pycache__
