@@ -21,6 +21,9 @@ app.register_blueprint(auth_bp)
 @app.route('/health')
 def get_health():
     return jsonify({'message': 'OK'}), 200
+@app.route('/startup')
+def startup():
+    return jsonify({'message': 'I\'m! up I\'m up!'}), 200
 
 if __name__ == '__main__':
     app.run(debug=True, port=8000, host='0.0.0.0')
