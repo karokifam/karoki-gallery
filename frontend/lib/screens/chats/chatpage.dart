@@ -98,7 +98,7 @@ class _ChatscreenState extends State<Chatscreen> {
       }
     }else{
       try {
-        final data = await ApiService.loadgroupMessages();
+        final data = await ApiService.loadMessages(widget.sender , widget.recipient);
         setState(() {
           messages = (data).map((item) => Message.fromJson(item)).toList();
           isLoading = false;
