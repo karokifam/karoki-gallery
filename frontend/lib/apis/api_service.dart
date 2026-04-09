@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Import for debugPrint
 
 class ApiService {
-  static const String baseUrl = "http://localhost:8000";
+  static const String baseUrl = "https://karoki-gallery.onrender.com";
 
   /// ---------------------- Login function ---------------------------------------
   Future<Map<String, dynamic>> login({
