@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:frontend/apis/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home.dart';
@@ -16,12 +15,13 @@ class _AuthState extends State<Auth> {
   final _passwordController = TextEditingController();
   bool obscureText = true;
 
-  final List<String> availableUsers = const [
-    'marykaroki',
-    'brendakaroki',
-    'daisykaroki',
-    'kenkaroki',
-    'dianakaroki',
+  // Fix 1 & 2: lowercase `dynamic` and closed generic brackets
+  final List<List<dynamic>> availableUsers = const [
+    ['Wangechi Shima', 'marykaroki'],
+    ['Brenda Karoki', 'brendakaroki'],
+    ['Daisy Karoki', 'daisykaroki'],
+    ['Ken Karoki', 'kenkaroki'],
+    ['Diana Karoki', 'dianakaroki'],
   ];
 
   Future<void> _login() async {
@@ -43,12 +43,10 @@ class _AuthState extends State<Auth> {
       if (loginStatus['success'] == true) {
         debugPrint('Selected User: $_selectedUser');
 
-        // Save login state
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('isLoggedIn', true);
         await prefs.setString('username', _selectedUser!);
 
-        // Navigate to Home
         if (mounted) {
           Navigator.pushReplacement(
             context,
@@ -56,7 +54,6 @@ class _AuthState extends State<Auth> {
           );
         }
       } else {
-        // Show error message from API
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(loginStatus['message'] ?? "Login failed")),
         );
@@ -84,8 +81,12 @@ class _AuthState extends State<Auth> {
                 fillColor: Theme.of(context).inputDecorationTheme.fillColor,
                 filled: true,
               ),
-              items: availableUsers.map((String user) {
-                return DropdownMenuItem<String>(value: user, child: Text(user));
+              // Fix 3: use index 1 as value (username), index 0 as label (display name)
+              items: availableUsers.map((user) {
+                return DropdownMenuItem<String>(
+                  value: user[1] as String,
+                  child: Text(user[0] as String),
+                );
               }).toList(),
               onChanged: (String? newValue) {
                 setState(() {
@@ -102,7 +103,13 @@ class _AuthState extends State<Auth> {
                 border: const OutlineInputBorder(),
                 fillColor: Theme.of(context).inputDecorationTheme.fillColor,
                 filled: true,
-                suffix: IconButton(onPressed: ()=> obscureText=!obscureText, icon: obscureText?Icon(Icons.visibility): Icon(Icons.visibility_off))
+                // Fix 4: wrap toggle in setState
+                suffix: IconButton(
+                  onPressed: () => setState(() => obscureText = !obscureText),
+                  icon: Icon(
+                    obscureText ? Icons.visibility : Icons.visibility_off,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 30),

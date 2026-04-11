@@ -20,7 +20,7 @@ def create_binder():
     data = request.json
     # UI only sends 'name'
     name = data.get("name")
-    name = name.replace(" ", "")
+    
 
     if not name:
         return jsonify({"error": "Missing binder name"}), 400
