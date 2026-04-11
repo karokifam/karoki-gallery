@@ -115,8 +115,8 @@ def poll():
     status = 'saved from deletion'
 
     # Check if total votes reached threshold
-    if poll_data.get('total_votes', 0) >= 5:
-        if poll_data.get('votes_delete', 0) == poll_data.get('votes_stay', 0):
+    if poll_data.get('total_votes', 0) >= 5 or poll_data.get('votes_delete', 0) >= 3:
+        if poll_data.get('votes_delete', 0) >= poll_data.get('votes_stay', 0):
             public_id = media_collection.find_one({'url': poll_data.get('memory')})['public_id']
             try:
                 cloudinary.uploader.destroy(public_id, resource_type="image")

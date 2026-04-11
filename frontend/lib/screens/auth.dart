@@ -46,6 +46,11 @@ class _AuthState extends State<Auth> {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('isLoggedIn', true);
         await prefs.setString('username', _selectedUser!);
+        await prefs.setString(
+          'display_username',
+          availableUsers.firstWhere((user) => user[1] == _selectedUser)[0]
+              as String,
+        );
 
         if (mounted) {
           Navigator.pushReplacement(

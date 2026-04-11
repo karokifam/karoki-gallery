@@ -14,7 +14,7 @@ class AccountPage extends StatefulWidget {
 }
 
 class _AccountPageState extends State<AccountPage> {
-  String? _username; // Nullable until loaded
+  String? display_username; // Nullable until loaded
 
   @override
   void initState() {
@@ -25,9 +25,9 @@ class _AccountPageState extends State<AccountPage> {
   // Async function to load username
   void _loadUsername() async {
     final prefs = await SharedPreferences.getInstance();
-    final storedUsername = prefs.getString('username') ?? '';
+    final storedUsername = prefs.getString('display_username') ?? '';
     setState(() {
-      _username = storedUsername;
+      display_username = storedUsername;
     });
   }
 
@@ -59,7 +59,7 @@ class _AccountPageState extends State<AccountPage> {
               radius: 50,
               backgroundColor: theme.primaryColor,
               child: Text(
-                (_username ?? '').substring(0, 1).toUpperCase(),
+                (display_username ?? '').substring(0, 1).toUpperCase(),
                 style: theme.textTheme.bodyLarge?.copyWith(
                   fontSize: 40,
                   fontWeight: FontWeight.bold,
@@ -71,7 +71,7 @@ class _AccountPageState extends State<AccountPage> {
             const SizedBox(height: 20),
 
             Text(
-              _username ?? '',
+              display_username ?? '',
               style: theme.textTheme.bodyLarge?.copyWith(
                 fontSize: 24,
                 fontWeight: FontWeight.w600,
