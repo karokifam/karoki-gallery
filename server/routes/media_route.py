@@ -124,7 +124,7 @@ def poll():
                 pass
             media_collection.delete_one({'url': poll_data.get('memory')})
             status = 'deleted'
-            chat_collection.delete_one({'_id':poll_obj_id})
+            chat_collection.delete_one({'_id':poll_id})
             poll_collection.delete_one({'_id':poll_obj_id})
 
         # Insert a message into chat collection
