@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:frontend/screens/auth.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/themes/theme_controller.dart';
-import 'package:frontend/screens/accounts/password_reset_screen.dart';
+import 'package:frontend/screens/accounts/password_reset_screen.dart'
+    deferred as passwordPage;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AccountPage extends StatefulWidget {
@@ -58,7 +59,7 @@ class _AccountPageState extends State<AccountPage> {
               radius: 50,
               backgroundColor: theme.primaryColor,
               child: Text(
-               ( _username??'').substring(0, 1).toUpperCase(),
+                (_username ?? '').substring(0, 1).toUpperCase(),
                 style: theme.textTheme.bodyLarge?.copyWith(
                   fontSize: 40,
                   fontWeight: FontWeight.bold,
@@ -70,7 +71,7 @@ class _AccountPageState extends State<AccountPage> {
             const SizedBox(height: 20),
 
             Text(
-              _username??'',
+              _username ?? '',
               style: theme.textTheme.bodyLarge?.copyWith(
                 fontSize: 24,
                 fontWeight: FontWeight.w600,
@@ -78,29 +79,26 @@ class _AccountPageState extends State<AccountPage> {
             ),
 
             const SizedBox(height: 8),
-             // 🔐 CHANGE PASSWORD BUTTON
+            // 🔐 CHANGE PASSWORD BUTTON
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.lock_reset),
                 label: const Text("Change Password"),
                 style: theme.elevatedButtonTheme.style,
-                onPressed: () {
+                onPressed: () async {
+                  await passwordPage.loadLibrary();
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const PasswordResetPage(),
+                      builder: (context) => passwordPage.PasswordResetPage(),
                     ),
                   );
                 },
               ),
             ),
 
-            
-
             const Spacer(),
-
-           
 
             const SizedBox(height: 12),
 

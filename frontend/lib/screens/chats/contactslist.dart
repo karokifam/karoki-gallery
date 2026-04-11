@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:frontend/screens/chats/chatpage.dart';
+import 'package:frontend/screens/chats/chatpage.dart' deferred as chatPage;
 
 class Contactslist extends StatelessWidget {
   final String username;
@@ -42,11 +42,12 @@ class Contactslist extends StatelessWidget {
           final displayName = filteredContacts[index][0];
 
           return GestureDetector(
-            onTap: () {
+            onTap: () async {
+              await chatPage.loadLibrary();
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => Chatscreen(
+                  builder: (context) => chatPage.Chatscreen(
                     recipient: recipientId,
                     sender: username,
                     displayname: displayName,

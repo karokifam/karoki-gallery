@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/screens/accounts/account.dart';
+import 'package:frontend/screens/accounts/account.dart' deferred as account;
 import 'package:frontend/screens/chats/contactslist.dart';
 import 'package:frontend/screens/memories/binders.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -49,10 +49,11 @@ class _HomeState extends State<Home> {
       appBar: AppBar(
         actions: [
           IconButton(
-            onPressed: () {
+            onPressed: () async {
+              await account.loadLibrary();
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => AccountPage()),
+                MaterialPageRoute(builder: (_) => account.AccountPage()),
               );
             },
             icon: Icon(Icons.account_circle_rounded),
