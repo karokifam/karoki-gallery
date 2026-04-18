@@ -8,8 +8,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class MediaScreen extends StatefulWidget {
   final String binderName;
+  final String binderPath;
 
-  const MediaScreen({super.key, required this.binderName});
+  const MediaScreen({super.key, required this.binderName , required this.binderPath,
+  });
 
   @override
   State<MediaScreen> createState() => _MediaScreenState();
@@ -38,7 +40,7 @@ class _MediaScreenState extends State<MediaScreen> {
 
   Future<void> loadMedia() async {
     try {
-      final data = await ApiService.getMedia(widget.binderName);
+      final data = await ApiService.getMedia(widget.binderPath);
 
       setState(() {
         media = data;
