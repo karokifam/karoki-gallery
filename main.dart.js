@@ -31201,7 +31201,7 @@ $S:2}
 A.aBb.prototype={
 $1(a){var s=A.dr().b
 s=s==null?null:s.canvasKitBaseUrl
-return(s==null?"https://www.gstatic.com/flutter-canvaskit/425cfb54d01a9472b3e81d9e76fd63a4a44cfbcb/":s)+a},
+return(s==null?"https://www.gstatic.com/flutter-canvaskit/59aa584fdf100e6c78c785d8a5b565d1de4b48ab/":s)+a},
 $S:124}
 A.PI.prototype={
 gt(a){var s=this.a
@@ -92305,7 +92305,7 @@ $0(){var s=A.m8(new A.ar_(this.b),null,t.z)
 A.dd(this.a,!1).hT(s)},
 $S:0}
 A.ar_.prototype={
-$1(a){return new A.r3(J.cR(this.a,"name"),null)},
+$1(a){return new A.r3(J.cR(this.a,"path"),null)},
 $S:552}
 A.ar0.prototype={
 $3(a,b,c){return A.e3(B.pr,A.S(a).k2.f,null,50)},
