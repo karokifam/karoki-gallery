@@ -148,7 +148,7 @@ class _BindersState extends State<Binders> {
                         context,
                         MaterialPageRoute(
                           builder: (_) =>
-                              MediaScreen(binderName: binder['name'] , binderPath:binder['path']),
+                              MediaScreen(binderName:binder['name'] , binderPath:binder['path']),
                         ),
                       );
                     },
